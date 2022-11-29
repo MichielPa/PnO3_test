@@ -20,6 +20,7 @@ var newPass = "";
 var newLic = "";
 // temporary variables
 
+var value;
 // following function allows us to start the app
 void main() {
   runApp(const MyApp());
@@ -29,6 +30,8 @@ void main() {
 Future<LoginResult> requestLogin(String email, String password) async {
   var response = await http.post(
     Uri.parse('http://192.168.137.11:8000/api/login'),
+    // voor de sign up hetzelfde maar op het einde "/register", en ook license plate
+    // doorsturen
     headers: {
       'Content-Type': 'application/json; charset=UTF-8',
 
@@ -52,6 +55,7 @@ Future<LoginResult> requestLogin(String email, String password) async {
   } on  FormatException catch(_) {
     return const LoginResult(description: "error from server", token: "");
   }
+  // this checks if there's an error from the back end
 /*
   if (response.statusCode == 201) {
     // If the server did return a 201 CREATED response,
@@ -92,19 +96,20 @@ class RequiresLogin extends ConsumerWidget {
     // we first take the value of loginResult from MyApp(using the provider, see main app)
     // and store it in a new variable
     final loginResult = ref.watch(loginProvider);
+    // watch means it automatically updates when the value of the loginProvider changes
     print("requireslogin");
     print(loginResult?.description);
     // when you open the app, you can go to the login page if you're not logged in,
     // to the main page if you're logged in, or else you get an error
     if(loginResult == null){
       return LoginPage();
-    } else if(loginResult!.isSuccessful){
-      // the exclamation mark means it will give an error when it's null
+    } else if(loginResult.isSuccessful){
       return child;
-      // the child defined in the initialisation
+      // the child defined in the initialisation, returns the page inside your requiredlogin
+      // for example the main page
     } else {
-      return const ErrorPage();
-      //error page that shows when you don't have a password or there's an erro
+      return LoginPage();
+      //error page that shows when you don't have a password or there's an error
       // in the back end
     }
   }
@@ -157,6 +162,7 @@ class LoginPage extends ConsumerWidget {
   // allows you to use the text entered in a text field as a variable
   final formKey = GlobalKey<FormState>();
   // we will later need this to recall the text fields
+  var value;
   @override
   Widget build(BuildContext context,WidgetRef ref) {
     return MaterialApp(
@@ -224,9 +230,8 @@ class LoginPage extends ConsumerWidget {
                             border: OutlineInputBorder(),
                             labelText: 'Password',
                           ),
-                          validator: (pass) => pass != password
-                              ? 'Login failed, password or email is incorrect'
-                              : null,
+                          validator: (_) =>
+                              'Login failed, password or email is incorrect'
                           // this validator if the password matches up with the
                           // correct password of the email
                         ),
@@ -248,35 +253,7 @@ class LoginPage extends ConsumerWidget {
                         'Forgot Password',
                       ),
                     ),
-                    Container(
-                      // the button to log in
-                        height: 50,
-                        padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                        child: ElevatedButton(
-                            child: const Text('LOGIN'),
-                            onPressed: () async{
-                              // async means this function needs to wait on something
-                              // from the back end (it won't run sunchronous, in order)
-                              final loginResult = await requestLogin(email, password);
-                              // await means we wait in this class for the back end
-                              // to send a value, but other classes can continue
-                              ref.read(loginProvider.notifier).state = loginResult;
-                              // this changes loginResult to your new value
-                              final form = formKey.currentState!;
-                              if (form.validate()) {
-                                // checks if the validator of the formfield is fulfilled,
-                                // so in this case if it's the correct password
-                                Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                        builder: (BuildContext context) {
-                                          // normally when you use push it adds a new page on the previous one,
-                                          // but with pushReplacement it replaces the old page with a new one,
-                                          // meaning you can't go back to the login page after you logged in
-                                          return const MainPage();
-                                        }));
-                              }
-                            })
-                    ),
+                    LoginButton(formKey: formKey, mailController: mailController, passwordController: passwordController),
                     Row(
                       // row places the coming widgets next to each other
                       // (column places them beneath each other)
@@ -287,7 +264,7 @@ class LoginPage extends ConsumerWidget {
                         const Text('Need an account?'),
                         TextButton(
                           child: const Text(
-                            'Sign in',
+                            'Sign up',
                             style: TextStyle(fontSize: 20),
                           ),
                           onPressed: () {
@@ -295,7 +272,8 @@ class LoginPage extends ConsumerWidget {
                                 builder: (BuildContext context) {
                                   return const SignUpPage();
                                   // makes you go to the sign up page when pressing the button
-                                })); //signup screen
+                                })
+                            ); //signup screen
                           },
                         )
                       ],
@@ -304,6 +282,58 @@ class LoginPage extends ConsumerWidget {
                 )
             )
         )
+    );
+  }
+}
+
+class LoginButton extends StatefulWidget {
+  const LoginButton({
+    Key? key,
+    required this.formKey,
+    required this.mailController,
+    required this.passwordController,
+  }) : super(key: key);
+
+  final GlobalKey<FormState> formKey;
+  final TextEditingController mailController;
+  final TextEditingController passwordController;
+
+  @override
+  State<LoginButton> createState() => _LoginButtonState();
+}
+class _LoginButtonState extends State<LoginButton> {
+  var loginButtonText = 'LOGIN';
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context,WidgetRef ref,_){
+        return Container(
+          // the button to log in
+            height: 50,
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+            child: ElevatedButton(
+                child: Text(loginButtonText),
+                onPressed: () async{
+                  setState((){
+                    loginButtonText= "Loading...";
+                  });
+                  // async means this function needs to wait on something
+                  // from the back end (it won't run synchronous, in order)
+                  final form = widget.formKey.currentState!;
+                  final loginResult = await requestLogin(widget.mailController.text, widget.passwordController.text);
+                  // await means we wait in this class for the back end
+                  // to send a value, but other classes can continue
+                  ref.read(loginProvider.notifier).state = loginResult;
+                  // this changes loginResult to your new value
+                  form.validate();
+                  // if your password is wrong it'll show an error on the screen
+                  setState((){
+                    loginButtonText= "LOGIN";
+                  });
+                }
+            )
+        );
+      }
     );
   }
 }
