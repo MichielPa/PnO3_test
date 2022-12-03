@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:pno3/login.dart';
+import 'package:pno3/loginBackEnd.dart';
 import 'package:pno3/accountPage.dart';
 import 'package:pno3/ReservationPage.dart';
+import 'package:pno3/MyApp.dart';
+import 'package:pno3/HistoryPage.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // riverpod is a package used so we can access a login token anywhere in the app
-
-final loginProvider = StateProvider<LoginResult?>((ref) => null);
-// because of ref, we can call the value of loginProvider everywhere we want
-// the questionmark after LoginResult means it can be null
 
 // temporary variables:
 var license2= '1-BCG-852';
 Set<String> plates = {license, license2}; // set so you can't have double plates
 
-int currentIndex = 1;
-// we will need this variable to change pages with the navigation bar
+
 void main() {  // a simple functions which allows us to open the app
   runApp(const ProviderScope(child: MyApp()));
 }
 // ProviderScope is the first widget in the app and all the providers
 // this means that from now on we can use loginProvider in all the widgets/classes
 // after MyApp
+
+int currentIndex = 1;
+// we will need this variable to change pages with the navigation bar
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
 
@@ -55,7 +56,7 @@ class _MainPage extends State<MainPage> {
                         ? const ReservationPage()
                         // finally we have the history page (else), it's very similar to
                         // the reservation page
-                        : const ReservationPage()
+                        : const HistoryPage()
             ),
             bottomNavigationBar: BottomNavigationBar(
               // this function defines the look of the bottom navigator we've been
