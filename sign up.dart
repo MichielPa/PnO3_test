@@ -312,12 +312,14 @@ class _SignUpPage extends State<SignUpPage> {
                               final form3 = formKey3.currentState!;
                               final form4 = formKey4.currentState!;
                               ref.read(emailProvider.notifier).state = emailController.text;
-                              ref.read(passwordProvider.notifier).state = passwordController.text;
                               ref.read(licenseProvider.notifier).state = licensePlateController.text;
                               // hier de email verification functie zetten
 
                               final signUpResult = await requestSignUp(emailController.text, passwordController.text,licensePlateController.text);
-                              ref.read(signUpProvider.notifier).state = signUpResult;
+                              ref.read(loginProvider.notifier).state = signUpResult;
+                              if(signUpResult.isSuccessful){
+                                Navigator.of(context).pop();
+                              }
                               form.validate();
                               form2.validate();
                               form3.validate();
