@@ -14,7 +14,7 @@ void main() {  // a simple functions which allows us to open the app
   runApp(const ProviderScope(child: MyApp()));
 }
 
-Future<Availability> requestAvailability(String email, String password, String timestamp1) async {
+Future<Availability> requestAvailability(String email, String token, String timestamp1) async {
   var response = await http.post(
     Uri.parse('http://192.168.137.200:8000/api/check_availability'),
     headers: {
@@ -25,7 +25,7 @@ Future<Availability> requestAvailability(String email, String password, String t
 
     body: jsonEncode(<String, String>{
       'email': email,
-      'password': password,
+      'token': token,
       'timestamp1': timestamp1
     }),
   );
@@ -36,7 +36,7 @@ Future<Availability> requestAvailability(String email, String password, String t
   try{
     return Availability.fromJson(jsonDecode(response.body));
   } on  FormatException catch(_) {
-    return const Availability(description: "error from server", timestamp: 0);
+    return const Availability(result: "error from server", timestamp: 0);
   }
   // this checks if there's an error from the back end
 /*
@@ -52,16 +52,16 @@ Future<Availability> requestAvailability(String email, String password, String t
  */
 }
 class Availability {
-  final String description;
+  final String result;
   final int timestamp;
 
-  const Availability({required this.description, required this.timestamp});
+  const Availability({required this.result, required this.timestamp});
 
   // this function is to see if the login is successful
   factory Availability.fromJson(Map<String, dynamic> json) {
     return Availability(
         timestamp: json['timestamp1'] as int,
-        description: json['result'] as String
+        result: json['result'] as String,
     );
   }
 }
@@ -75,19 +75,8 @@ class ReservationPage extends StatefulWidget {
 class _ReservationPage extends State<ReservationPage> {
   var endHour;
   Set<int> fullHours = {168};
-  Future<int> freePlaces(int index) async{
-    final availability = await requestAvailability(email, password,
-      DateFormat('dd-MM-yyyy HH').format(DateTime.now().add(Duration(hours: index))).toString(),
-    );
-    int filledSpots = availability.timestamp;
-    print("hier kijken");
-    print(filledSpots);
-    return filledSpots;
-  }
-
   var timeslots = 5;
   final ScrollController _scrollController = ScrollController();
-
 
   @override
   Widget build(BuildContext context) {
@@ -98,52 +87,70 @@ class _ReservationPage extends State<ReservationPage> {
         setState(() {});
       }
     });
-    return CustomScrollView(
-        controller: _scrollController,
-        // This widgets makes a list of grids you can scroll through
-        slivers: <Widget>[
-          // list of widgets
-          SliverGrid(
-            // we first define one grid
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      if(index == timeslots){
-                        return const CupertinoActivityIndicator();
+    return Consumer(
+      builder: (context,WidgetRef ref,_){
+        final loginResult = ref.watch(loginProvider.notifier).state;
+        // we call the same token and email we used when we logged in using the loginProvider
+        Future<int> freePlaces(int index) async{
+          final availability = await requestAvailability(loginResult!.email, loginResult.token,
+            DateFormat('dd-MM-yyyy HH').format(DateTime.now().add(Duration(hours: index))).toString(),
+          );
+          int filledSpots = availability.timestamp;
+          print("hier kijken");
+          print(filledSpots);
+          return filledSpots;
+        }
+      return CustomScrollView(
+          controller: _scrollController,
+          // This widgets makes a list of grids you can scroll through
+          slivers: <Widget>[
+            // list of widgets
+            SliverGrid(
+              // we first define one grid
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if(index == timeslots){
+                          return const CupertinoActivityIndicator();
+                        }
+                        var color = Colors.blue;
+                        var hour = DateFormat('HH:00').format(DateTime.now().add(Duration(hours: index)));
+                    // always start with the current time and each
+                    //grid/timeslot is an hour later
+                    // parse changes a string in to an integer
+                    // HH gives the current hour (without minutes or seconds)
+                    var date = DateFormat('dd-MM-yyyy').format(DateTime.now().add(Duration(hours: index)));
+                    //Datetime.now() gives us the current time (date, hours, minutes, seconds)
+                    //DateFormat allows us to chose in what way we show the date
+                    return FutureBuilder<int>(
+                      future: freePlaces(index),
+                      // saves it in snapshot
+                      builder: (context,snapshot) {
+                        if(snapshot.hasData) {
+                          int filledSpots = snapshot.data!;
+                          // filledSpots is now equal to the amount of reserved parking
+                          // places during the timestamp
+                          return _buildData(color, context, index, date, hour, filledSpots);
+                        } else if(snapshot.hasError){
+                          return Text(snapshot.error.toString());
+                          // there was an error from the back end
+                        }else{
+                          return const Center(child: CircularProgressIndicator());
+                          // a loaing sumbol while we wait on the server
+                        }
                       }
-                      var color = Colors.blue;
-                      var hour = DateFormat('HH:00').format(DateTime.now().add(Duration(hours: index)));
-                  // always start with the current time and each
-                  //grid/timeslot is an hour later
-                  // parse changes a string in to an integer
-                  // HH gives the current hour (without minutes or seconds)
-                  var date = DateFormat('dd-MM-yyyy').format(DateTime.now().add(Duration(hours: index)));
-                  //Datetime.now() gives us the current time (date, hours, minutes, seconds)
-                  //DateFormat allows us to chose in what way we show the date
-                  return FutureBuilder<int>(
-                    future: freePlaces(index),
-                    // saves it in snapshot
-                    builder: (context,snapshot) {
-                      if(snapshot.hasData) {
-                        int filledSpots = snapshot.data!;
-                        return _buildData(color, context, index, date, hour, filledSpots);
-                      } else if(snapshot.hasError){
-                        return Text(snapshot.error.toString());
-                      }else{
-                        return const CircularProgressIndicator();
-                      }
-                    }
-                  );
-                },
-                childCount: timeslots + 1,
-                // how many grids/buttons there are
-              ),
-              gridDelegate:
-              const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 1, childAspectRatio: 2.7
-                // how many buttons you can see on the screen at once
-              ))
-        ],
-      );
+                    );
+                  },
+                  childCount: timeslots + 1,
+                  // how many grids/buttons there are
+                ),
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 1, childAspectRatio: 2.7
+                  // how many buttons you can see on the screen at once
+                ))
+          ],
+        );}
+    );
   }
 
   Widget _buildData(MaterialColor color, BuildContext context, int index,
