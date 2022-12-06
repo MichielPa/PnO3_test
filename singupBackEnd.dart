@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pno3/MyApp.dart';
+import 'package:pno3/loginBackEnd.dart';
 import 'package:pno3/main%20app.dart';
 import 'package:pno3/sign up.dart';
 
@@ -17,9 +18,9 @@ void main() {
 }
 
 // this is for the connection
-Future<SignUpResult> requestSignUp(String email, String password, String licensePlate) async {
+Future<LoginResult> requestSignUp(String email, String password, String licenseplate) async {
   var response = await http.post(
-    Uri.parse('http://192.168.137.11:8000/api/register'),
+    Uri.parse('http://192.168.137.200:8000/api/register'),
     headers: {
       'Content-Type': 'application/json; charset=UTF-8',
 
@@ -29,20 +30,16 @@ Future<SignUpResult> requestSignUp(String email, String password, String license
     body: jsonEncode(<String, String>{
       'email': email,
       'password': password,
-      'licensePlate': licensePlate
+      'licenseplate': licenseplate
 
     }),
   );
 
 
-  //var answer = jsonDecode(response.statusCode as String);
-  //print("Dit is de response.body");0
-  print(response.body);
-
   try{
-    return SignUpResult.fromJson(jsonDecode(response.body));
+    return LoginResult.fromJson(jsonDecode(response.body));
   } on  FormatException catch(_) {
-    return const SignUpResult(description: "error from server", token: "");
+    return const LoginResult(description: "error from server", token: "");
   }
   // this checks if there's an error from the back end
 /*
@@ -57,23 +54,8 @@ Future<SignUpResult> requestSignUp(String email, String password, String license
   }
  */
 }
-
-class SignUpResult {
-  final String description;
-  final String token;
-
-  const SignUpResult({required this.description, required this.token});
-
-  bool get isSuccessful => description == "Signed up successfully";
-  // this function is to see if the login is successful
-  factory SignUpResult.fromJson(Map<String, dynamic> json) {
-    return SignUpResult(
-        token: json['token'],
-        description: json['result']
-    );
-  }
-}
-
+/*
+//state manager
 class RequiresLogin extends ConsumerWidget {
   // ConsumerWidget is from flutter_riverpod, it makes sure we can use loginProvider
   // (see main app)
@@ -102,3 +84,4 @@ class RequiresLogin extends ConsumerWidget {
     }
   }
 }
+*/
