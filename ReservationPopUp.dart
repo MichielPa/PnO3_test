@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pno3/MyApp.dart';
+import 'package:pno3/main%20app.dart';
 import 'reservationBackEnd.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -114,10 +115,8 @@ class _ReservationPopUp extends State<ReservationPopUp> {
                                                           child: Text("Successfully reserved a parking place")),
                                                       actions: [TextButton(
                                                                   onPressed: () {
-                                                                    Navigator.of(context,
-                                                                        rootNavigator:
-                                                                        true)
-                                                                        .pop();
+                                                                    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(
+                                                                        builder: (context) => const MainPage()), (Route route) => false);
                                                                   },
                                                                   child: const Text("Return")
                                                               )]
@@ -131,13 +130,13 @@ class _ReservationPopUp extends State<ReservationPopUp> {
                                                       content: const SizedBox(
                                                           height: 40,
                                                           child: Text(
-                                                              "Something went wrong while making a reservation")),
+                                                              "Something went wrong while making a reservation, "
+                                                                  "maybe you already reserved during this time or the "
+                                                                  "one of the hours is full")),
                                                       actions: [TextButton(
                                                           onPressed: () {
-                                                            Navigator.of(context,
-                                                                rootNavigator:
-                                                                true)
-                                                                .pop();
+                                                            Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(
+                                                                builder: (context) => const MainPage()), (Route route) => false);
                                                           },
                                                           child: const Text("Return")
                                                       )]
