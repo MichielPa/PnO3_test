@@ -3,16 +3,19 @@ import 'package:email_validator/email_validator.dart';
 // this import is for the email validation function used
 import 'package:pno3/singupBackEnd.dart';
 import 'package:pno3/MyApp.dart';
+/*
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io'; // token
 import 'package:http/http.dart' as http;
+*/
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
+/*
 Future<Register> requestSingUp(String email, String password, String licensePlate) async {
   var response = await http.post(
     Uri.parse('http://192.168.137.11:8000/api/register'),
@@ -71,6 +74,8 @@ class Register {
     );
   }
 }
+*/
+
 
 // the code of the sign up page is very similar to that of the login page
 class SignUpPage extends StatefulWidget {
@@ -311,9 +316,6 @@ class _SignUpPage extends State<SignUpPage> {
                               final form2 = formKey2.currentState!;
                               final form3 = formKey3.currentState!;
                               final form4 = formKey4.currentState!;
-                              ref.read(emailProvider.notifier).state = emailController.text;
-                              ref.read(licenseProvider.notifier).state = licensePlateController.text;
-                              // hier de email verification functie zetten
 
                               final signUpResult = await requestSignUp(emailController.text, passwordController.text,licensePlateController.text);
                               ref.read(loginProvider.notifier).state = signUpResult;

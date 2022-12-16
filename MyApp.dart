@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pno3/ReservationPage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pno3/main app.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pno3/loginBackEnd.dart';
-import 'package:pno3/singupBackEnd.dart';
 // a simple functions which allows us to open the app
 
 var password = 'testtest';
@@ -16,16 +15,15 @@ var newLic = "";
 // temporary variables
 
 final loginProvider = StateProvider<LoginResult?>((ref) => null);
-final signUpProvider = StateProvider<SignUpResult?>((ref) => null);
 // because of ref, we can call the value of loginProvider everywhere we want
 // the questionmark after LoginResult means it can be null
+final endTimeProvider = StateProvider<String?>((ref) => null);
+final beginTimeProvider = StateProvider<String?>((ref) => null);
 
-final availabilityProvider = StateProvider<Availability?>((ref) => null);
-final passwordProvider = StateProvider<String?>((ref) => null);
-final emailProvider = StateProvider<String?>((ref) => null);
-final licenseProvider = StateProvider<String?>((ref) => null);
+const historyStorage = FlutterSecureStorage();
 
 void main() {
+  // shared preferences
   runApp(const ProviderScope(child: MyApp()));
 }
 

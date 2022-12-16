@@ -4,6 +4,7 @@ import 'package:pno3/accountPage.dart';
 import 'package:pno3/ReservationPage.dart';
 import 'package:pno3/MyApp.dart';
 import 'package:pno3/HistoryPage.dart';
+import 'login.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // riverpod is a package used so we can access a login token anywhere in the app
@@ -37,9 +38,7 @@ class _MainPage extends State<MainPage> {
   Widget build(BuildContext context) {
     return RequiresLogin(
       // we use the widget we made in the login file to check if
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold( // the lay-out of the app
+        child: Scaffold(// the lay-out of the app
             appBar: AppBar(
               centerTitle: true,
               title: const Text('SMARK'),
@@ -78,7 +77,6 @@ class _MainPage extends State<MainPage> {
               },
             )
         ),
-      ),
-    );
+      );
   }
 }

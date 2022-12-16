@@ -19,14 +19,30 @@ class ReservationPopUp extends StatefulWidget {
 
   final List<String> endTimes;
   final int index;
-
   @override
   State<ReservationPopUp> createState() => _ReservationPopUp();
 }
 class _ReservationPopUp extends State<ReservationPopUp> {
   var endTime;
+
   @override
   Widget build(BuildContext context) {
+    /*
+    bool isFirst(var time1,var time2){
+      if (time1 == null) {
+        return false;
+      } else if (int.parse(time1.substring(6, 10)) >= int.parse(time2.substring(6, 10))) {
+        return false;
+      } else if (int.parse(time1.substring(3, 5)) >= int.parse(time2.substring(3, 5))) {
+        return false;
+      } else if (int.parse(time1.substring(0, 2)) >= int.parse(time2.substring(0, 2))) {
+        return false;
+      } else if (int.parse(endTime.substring(13, 15)) >= int.parse(endTime.substring(13, 15))) {
+        return false;
+      } else {
+        return true;
+      }
+    }*/
     return Consumer(
         builder: (context,WidgetRef ref,_){
           return AlertDialog(
@@ -106,6 +122,7 @@ class _ReservationPopUp extends State<ReservationPopUp> {
                                               endTime.toString().substring(0,2), endTime.toString().substring(3,5),
                                               endTime.toString().substring(6,10));
                                           if(confirmReservation.result == 'reservation successfully made'){
+                                            // we remember the begin and end times in a provider
                                             showDialog(
                                                 context: context,
                                                 builder: (BuildContext context) {
@@ -128,11 +145,10 @@ class _ReservationPopUp extends State<ReservationPopUp> {
                                                 builder: (BuildContext context) {
                                                   return AlertDialog(
                                                       content: const SizedBox(
-                                                          height: 40,
+                                                          height: 80,
                                                           child: Text(
-                                                              "Something went wrong while making a reservation, "
-                                                                  "maybe you already reserved during this time or the "
-                                                                  "one of the hours is full")),
+                                                              "Something went wrong while making a reservation, maybe you already reserved during "
+                                                                  "this time or the one of the hours is full.")),
                                                       actions: [TextButton(
                                                           onPressed: () {
                                                             Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(

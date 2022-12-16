@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pno3/MyApp.dart';
-import 'package:pno3/loginBackEnd.dart';
+import 'package:pno3/login.dart';
 
 // import this so we can go there after we're done with login or signing in
 import 'dart:async';
@@ -15,10 +15,12 @@ void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-// we reuse most of the things from the login
-Future<LoginResult> requestSignUp(String email, String password, String licenseplate) async {
+// this is for the connection
+Future<LoginResult> requestLogin(String email, String password) async {
   var response = await http.post(
-    Uri.parse('http://192.168.137.99:8000/api/register'),
+    Uri.parse('http://192.168.137.99:8000/api/login'),
+    // voor de sign up hetzelfde maar op het einde "/register", en ook license plate
+    // doorsturen
     headers: {
       'Content-Type': 'application/json; charset=UTF-8',
 
@@ -28,16 +30,17 @@ Future<LoginResult> requestSignUp(String email, String password, String licensep
     body: jsonEncode(<String, String>{
       'email': email,
       'password': password,
-      'licenseplate': licenseplate
 
     }),
   );
-
+  //var answer = jsonDecode(response.statusCode as String);
+  //print("Dit is de response.body");0
+  print(response.body);
 
   try{
     return LoginResult.fromJson(jsonDecode(response.body));
   } on  FormatException catch(_) {
-    return const LoginResult(description: "error from server", token: "",email:"",licenseplate: "");
+    return const LoginResult(description: "error from server", token: "", email:"",licenseplate: "");
   }
   // this checks if there's an error from the back end
 /*
@@ -52,8 +55,27 @@ Future<LoginResult> requestSignUp(String email, String password, String licensep
   }
  */
 }
-/*
-//state manager
+
+class LoginResult {
+  final String description;
+  final String token;
+  final String email;
+  final String licenseplate;
+
+  const LoginResult({required this.description, required this.token, required this.email, required this.licenseplate});
+
+  bool get isSuccessful => description == "Logged in successfully" || description == "Registered successfully";
+  // this function is to see if the login is successful
+  factory LoginResult.fromJson(Map<String, dynamic> json) {
+    return LoginResult(
+        token: json['token'],
+        description: json['result'],
+        email: json['email'],
+       licenseplate: json['licenseplate']
+    );
+  }
+}
+
 class RequiresLogin extends ConsumerWidget {
   // ConsumerWidget is from flutter_riverpod, it makes sure we can use loginProvider
   // (see main app)
@@ -64,22 +86,21 @@ class RequiresLogin extends ConsumerWidget {
   Widget build(BuildContext context,WidgetRef ref){
     // we first take the value of loginResult from MyApp(using the provider, see main app)
     // and store it in a new variable
-    final signUpResult = ref.watch(signUpProvider);
+    final loginResult = ref.watch(loginProvider);
     // watch means it automatically updates when the value of the loginProvider changes
 
     // when you open the app, you can go to the login page if you're not logged in,
     // to the main page if you're logged in, or else you get an error
-    if(signUpResult == null){
-      return const SignUpPage();
-    } else if(signUpResult.isSuccessful){
-      return const MainPage();
+    if(loginResult == null){
+      return LoginPage();
+    } else if(loginResult.isSuccessful){
+      return child;
       // the child defined in the initialisation, returns the page inside your requiredlogin
       // for example the main page
     } else {
-      return const SignUpPage();
+      return LoginPage();
       //error page that shows when you don't have a password or there's an error
       // in the back end
     }
   }
 }
-*/

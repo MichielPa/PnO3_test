@@ -51,7 +51,7 @@ class _ReservationPage extends State<ReservationPage> {
           SliverGrid(
               // we first define one grid
               delegate: SliverChildBuilderDelegate(
-                (context, index) {
+                    (context, index) {
                   if (index == timeslots) {
                     return const CupertinoActivityIndicator();
                   }

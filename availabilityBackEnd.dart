@@ -12,11 +12,9 @@ void main() {  // a simple functions which allows us to open the app
   runApp(const ProviderScope(child: MyApp()));
 }
 
-Future<Reserve> requestReservation(String email, String token, String begin_hour,
-    String begin_day, String begin_month, String begin_year, String end_hour, String end_day,
-    String end_month, String end_year) async {
+Future<Availability> requestAvailability(String email, String token, String timestamp1) async {
   var response = await http.post(
-    Uri.parse('http://192.168.137.99:8000/api/reserve'),
+    Uri.parse('http://192.168.137.99:8000/api/check_availability'),
     headers: {
       'Content-Type': 'application/json; charset=UTF-8',
 
@@ -26,14 +24,7 @@ Future<Reserve> requestReservation(String email, String token, String begin_hour
     body: jsonEncode(<String, String>{
       'email': email,
       'token': token,
-      'begin_hour': begin_hour,
-      'begin_day': begin_day,
-      'begin_month': begin_month,
-      'begin_year': begin_year,
-      'end_hour': end_hour,
-      'end_day': end_day,
-      'end_month': end_month,
-      'end_year': end_year,
+      'timestamp1': timestamp1
     }),
   );
   //var antwoord = jsonDecode(response.statusCode as String);
@@ -41,9 +32,9 @@ Future<Reserve> requestReservation(String email, String token, String begin_hour
   print(response.body);
 
   try{
-    return Reserve.fromJson(jsonDecode(response.body));
+    return Availability.fromJson(jsonDecode(response.body));
   } on  FormatException catch(_) {
-    return const Reserve(result: "error from server");
+    return const Availability(result: "error from server", timestamp: 0);
   }
   // this checks if there's an error from the back end
 /*
@@ -58,16 +49,17 @@ Future<Reserve> requestReservation(String email, String token, String begin_hour
   }
  */
 }
-class Reserve {
+class Availability {
   final String result;
+  final int timestamp;
 
-  const Reserve({required this.result});
+  const Availability({required this.result, required this.timestamp});
 
   // this function is to see if the login is successful
-  factory Reserve.fromJson(Map<String, dynamic> json) {
-    return Reserve(
+  factory Availability.fromJson(Map<String, dynamic> json) {
+    return Availability(
+      timestamp: json['timestamp1'] as int,
       result: json['result'] as String,
-
     );
   }
 }
